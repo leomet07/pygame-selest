@@ -1,28 +1,29 @@
 import pygame
 import os
 bg = pygame.image.load("img/bg.png")
-LINES = [
-{"xy": (100,400), "x2y2": (210,400) },
-    {"xy": (100,430), "x2y2": (250,430) }
-
-]
+char = pygame.image.load("img/potato.png")
 
 class Player:
     def __init__(self, x, y):
         self.g = 2
         self.x = x
         self.y = y
-        self.h = 10
-        self.w = 10
-        self.jumph = 200
+        self.h = 24
+        self.w = 24
+        self.jumph = 110
         self.isJump = False
         self.jumpcount = 10
 
     def draw(self, win):
+        global char
 
-        pygame.draw.rect(win, (255, 0, 0), (self.x, self.y, self.w, self.h))
+        #pygame.draw.rect(win, (255, 0, 0), (self.x, self.y, self.w, self.h))
+        sprite = char
+        char = pygame.transform.scale(sprite, (self.w, self.h))
+        win.blit(char, (self.x, self.y))
 
     def update(self):
+
         #gravity conditions
         #print(self.y + self.h, self.x + self.w)
 
@@ -31,8 +32,9 @@ class Player:
             #print(not(self.y + self.h == line["xy"][1]  and self.x > line["xy"][0] and self.x < line["x2y2"][0] )  and self.y + self.h < 498)
 
             #print(not(self.y + self.h == line["xy"][1]  and self.x < line["x2y2"][0] and self.x > line["xy"][0] ) )
+
             if (allow):
-                if not(not(self.y + self.h == line["xy"][1]  and self.x > line["xy"][0] and self.x < line["x2y2"][0] )  and self.y + self.h < 498):
+                if not(not(self.y + self.h == line["xy"][1]  and self.x + (self.w/1) > line["xy"][0] and self.x < line["x2y2"][0] )  and self.y + self.h < 498):
 
                     allow =  False
                     #print("DISSALLOW")
@@ -42,6 +44,10 @@ class Player:
 
         #print("-----")
 
+        #check for win condition
+        if self.y + self.h == 70:
+            print("win")
+
     def jump(self):
         print("jump command retrieved")
         #if above ground then jump
@@ -50,23 +56,15 @@ class Player:
         if self.y + self.h >= 498 :
             #only jump if line not in the way
             print("jump called")
-            for i in range(0,len(LINES)):
-                line = LINES[i]
-                if i != 0:
-                    equation =  not(self.y +self.h - self.jumph < LINES[i-1]["xy"][1] and self.x < line["x2y2"][0] and self.x > line["xy"][0])
 
-                else:
-                    equation = not (self.y + self.h - self.jumph < LINES[i]["xy"][1] and self.x < line["x2y2"][ 0] and self.x > line["xy"][0])
+            line = LINES[-1]
 
-                if equation :
+            equation = not (self.y + self.h - self.jumph < LINES[-1]["xy"][1] and self.x < line["x2y2"][ 0] and self.x + (self.w/2) > line["xy"][0])
 
 
 
-                    allow = True
-                else:
-                    allow = False
 
-            if allow:
+            if equation:
                 self.y -= self.jumph
                 #print("pix")
 
@@ -88,7 +86,8 @@ class Player:
                 #print("Allowence" + str(self.y + self.h - self.jumph) + str(500 - LINES[i - 1]["xy"][1]))
                 print("Allowence" + str( self.y + self.h - self.jumph < 500 - LINES[i-1]["xy"][1] ))
                 '''
-                equation =( self.x > LINES[i-1]["x2y2"][0] or self.x < LINES[i-1]["xy"][0]) or   self.y + self.h - self.jumph < 500 - LINES[i-1]["xy"][1]
+                print(int(self.y + self.h - self.jumph*0.7 ), LINES[i-1]["xy"][1] - LINES[i]["xy"][1])
+                equation =( self.x > LINES[i-1]["x2y2"][0] or self.x < LINES[i-1]["xy"][0]) or   self.y + self.h - self.jumph < LINES[i]["xy"][1] - LINES[i-1]["xy"][1]
                 #print("here" + str(equation))
 
 
@@ -101,13 +100,25 @@ class Player:
 
 
 
+LINES = [
 
+{"xy": (166,70), "x2y2": (332,70) },
+{"xy": (2,136), "x2y2": (196,136) },
+{"xy": (255,190), "x2y2": (498,190) },
+{"xy": (2,250), "x2y2": (200,250) },
+{"xy": (260,310), "x2y2": (498,310) },
+{"xy": (2,364), "x2y2": (206,364) },
+    {"xy": (166,430), "x2y2": (332,430) }
+
+
+]
+player = Player(260, 120)
 run = True
 pygame.init()
 winh = 500
 winw = winh
 win = pygame.display.set_mode((winw, winh))
-player = Player(250, 50)
+
 pygame.display.set_caption('Selest')
 background = pygame.Surface(win.get_size())
 background.fill((0, 0, 0))
@@ -139,11 +150,11 @@ while run:
 
     if keys[pygame.K_RIGHT]:
         if player.x + player.w < ( winw- 5):
-            player.x += 4
+            player.x += 6
     if keys[pygame.K_LEFT]:
         if player.x > 2:
 
-            player.x -= 4
+            player.x -= 6
     for event in pygame.event.get():
 
         # wont throw an error if it quits.It thought player playerre quiting so it would quit.But now player arent so it works
