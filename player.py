@@ -1,8 +1,13 @@
 import pygame
 import os
-bg = pygame.image.load("img/bg.png")
-char = pygame.image.load("img/potato.png")
-
+pygame.init()
+winh = 500
+winw = winh
+win = pygame.display.set_mode((winw, winh))
+bg = pygame.image.load("src/bg.png")
+char = pygame.image.load("src/potato.png")
+music = pygame.mixer.music.load('src/bgmusic.mp3')
+pygame.mixer.music.play(-1)
 class Player:
     def __init__(self, x, y):
         self.g = 2
@@ -69,26 +74,12 @@ class Player:
                 #print("pix")
 
         #if on a line jump if the line above is far away
+
         for i in range(0,len(LINES)):
             #print("line check")
             line = LINES[i]
-            equation = False
-            if i == 0:
-                equation = True
+            equation = True
 
-            else:
-                #debugging
-                '''
-                print(self.x , LINES[i-1]["x2y2"][0] )
-                print(self.x , LINES[i-1]["xy"][1])
-                print((self.x > LINES[i-1]["x2y2"][0] , self.x < LINES[i-1]["xy"][0]))
-                print("xValues" + str((self.x > LINES[i-1]["x2y2"][0] or self.x < LINES[i-1]["xy"][0])))
-                #print("Allowence" + str(self.y + self.h - self.jumph) + str(500 - LINES[i - 1]["xy"][1]))
-                print("Allowence" + str( self.y + self.h - self.jumph < 500 - LINES[i-1]["xy"][1] ))
-                '''
-                print(int(self.y + self.h - self.jumph*0.7 ), LINES[i-1]["xy"][1] - LINES[i]["xy"][1])
-                equation =( self.x > LINES[i-1]["x2y2"][0] or self.x < LINES[i-1]["xy"][0]) or   self.y + self.h - self.jumph < LINES[i]["xy"][1] - LINES[i-1]["xy"][1]
-                #print("here" + str(equation))
 
 
 
@@ -96,6 +87,9 @@ class Player:
             if  self.y + self.h == line["xy"][1]:
                 if equation:
                     self.y -= self.jumph
+
+
+
 
 
 
@@ -114,10 +108,7 @@ LINES = [
 ]
 player = Player(260, 120)
 run = True
-pygame.init()
-winh = 500
-winw = winh
-win = pygame.display.set_mode((winw, winh))
+
 
 pygame.display.set_caption('Selest')
 background = pygame.Surface(win.get_size())
@@ -132,12 +123,16 @@ def update():
     #drawing after bg blip
 
     player.draw(win)
-    for line in LINES:
-
-        c1 =  line["xy"]
+    for i in range(0,len(LINES)):
+        line = LINES[i]
+        c1 = line["xy"]
         c2 = line["x2y2"]
+        if i == 0:
+            pygame.draw.line(win, (255, 0, 0), c1, c2)
+            continue
 
-        pygame.draw.line(win, (255,255,255), c1 ,c2 )
+
+
         pygame.draw.line(win, (255, 255, 255),c1, c2)
 
     # win.blit(bg, (0, 0))
@@ -155,15 +150,16 @@ while run:
         if player.x > 2:
 
             player.x -= 6
+
+    if keys[pygame.K_UP]:
+        player.jump()
     for event in pygame.event.get():
 
         # wont throw an error if it quits.It thought player playerre quiting so it would quit.But now player arent so it works
         if event.type == pygame.QUIT:
             run = False
 
-        if keys[pygame.K_UP]:
 
-            player.jump()
 
     player.update()
     update()
