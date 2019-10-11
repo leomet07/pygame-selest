@@ -50,7 +50,8 @@ class Player:
         #print("-----")
 
         #check for win condition
-        if self.y + self.h == 70:
+        line = LINES[0]
+        if self.y + self.h == 70  and self.x + self.w > line["xy"][ 0] and self.x < line["x2y2"][ 0]:
             print("win")
 
     def jump(self):
@@ -84,7 +85,8 @@ class Player:
 
 
             #print(equation)
-            if  self.y + self.h == line["xy"][1]:
+            #HEHERE
+            if  self.y + self.h == line["xy"][1] and self.x + self.w > line["xy"][ 0] and self.x < line["x2y2"][ 0]:
                 if equation:
                     self.y -= self.jumph
 
