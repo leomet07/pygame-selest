@@ -95,7 +95,7 @@ class Enemy:
                 #problem above
                 #move bullet up by cham\nging its why
                 #print("moving bullet up")
-                BULLETS[i - deleted][1] -= 3
+                BULLETS[i - deleted][1] -= 5
             else:
                 dupbullets.pop(i)
                 deleted += 1
@@ -226,11 +226,11 @@ LINES = [
 {"xy": (2,250), "x2y2": (200,250) },
 {"xy": (260,310), "x2y2": (498,310) },
 {"xy": (2,364), "x2y2": (206,364) },
-    {"xy": (166,430), "x2y2": (332,430) }
+{"xy": (166,430), "x2y2": (332,430) }
 ]
 
 BULLETS = []
-player = Player(260, 460)
+player = Player(400, 460)
 enemy = Enemy(30, 450)
 run = True
 
