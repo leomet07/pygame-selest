@@ -9,6 +9,9 @@ char = pygame.image.load("src/potato.png")
 monster = pygame.image.load("src/monster.png")
 music = pygame.mixer.music.load('src/bgmusic.mp3')
 pygame.mixer.music.play(-1)
+pygame.font.init() # you have to call this at the start,
+                   # if you want to use this module.
+comicsans = pygame.font.SysFont('Comic Sans MS', 30)
 
 class Enemy:
     def __init__(self, x , y):
@@ -21,11 +24,14 @@ class Enemy:
     def draw(self, win):
         global char
         global monster
+        #pygame.draw.rect(win, (255, 0, 0), (self.x, self.y, self.w, self.h))
 
         #pygame.draw.rect(win, (255, 0, 0), (self.x, self.y, self.w, self.h))
         sprite = monster
         monster = pygame.transform.scale(sprite, (self.w, self.h))
         win.blit(monster, (self.x, self.y))
+
+
 
 
         #draw bullets
@@ -48,23 +54,18 @@ class Enemy:
         # checks if pixels are touching and not if the recs are touching
         # masks are 2d arrays of the pixels of the sprite and not the white stuuff that isnt the sprite
         # checks if ny pixel collides with another one
-        bird_mask = bird.get_mask()
+        b_point = False
+        #print(bird.y, self.y)
+        if bird.x <= self.x + self.w and bird.x >= self.x :
+
+            if bird.y >= self.y  and bird.y <= self.y + self.h:
+                print("hit")
+                b_point = True
 
 
-        bottom_mask = pygame.mask.from_surface(monster)
-
-        # how far each mask is from the other
-
-        bottom_offset = (self.x - bird.x, self.y + self.h - round(bird.y))
-
-        # tells point of collision
-        b_point = bird_mask.overlap(bottom_mask, bottom_offset)
 
 
-        if b_point :
-            return True
-
-        return False
+        return b_point
 
     def launchbullets(self, player):
         print("Launching bullets")
@@ -75,7 +76,7 @@ class Enemy:
     def update(self, player):
         global BULLETS
         self.tickcount += 1
-        if self.tickcount == 100:
+        if self.tickcount == 75:
             print("launch")
             self.tickcount = 0
             self.launchbullets(player)
@@ -122,11 +123,11 @@ class Enemy:
             #move up if player is below
             self.y += 2
 
-        if self.x < player.x + player.w :
+        if self.x < player.x  :
             #move up if player is below
             self.x += 2
 
-        if self.x > player.x  :
+        if self.x > player.x + player.w :
             #move up if player is below
             self.x -= 2
 class Bullet:
@@ -198,7 +199,7 @@ class Player:
         return pygame.mask.from_surface(self.img)
 
     def jump(self):
-        print("jump command retrieved")
+        #print("jump command retrieved")
         #if above ground then jump
 
         allow = False
@@ -238,7 +239,15 @@ class Player:
 
 
 
+import json
+LINES = []
+data = []
+with open('level.json') as json_file:
+    data = json.load(json_file)
+    print(data[0]["level"])
+    LINES = data[0]["level"]
 
+'''
 LINES = [
 
 {"xy": (166,70), "x2y2": (332,70) },
@@ -249,8 +258,9 @@ LINES = [
 {"xy": (2,364), "x2y2": (206,364) },
 {"xy": (166,430), "x2y2": (332,430) }
 ]
-
+'''
 BULLETS = []
+SCORE = data[0]["time"]
 player = Player(400, 460)
 enemy = Enemy(30, 450)
 run = True
@@ -262,10 +272,20 @@ background.fill((0, 0, 0))
 
 
 def update():
+
+    #update player twice so more gravity and as a backup
+    player.update()
     player.update()
 
 
+
+
+
     win.blit(bg, (0, 0))
+
+    # writing the score to the screen
+    textsurface = comicsans.render("Score: " + str(SCORE), True, (0, 0, 0))
+    win.blit(textsurface, (0, 0))
     #drawing after bg blip
     enemy.draw(win)
     player.draw(win)
@@ -285,6 +305,8 @@ def update():
     pygame.display.update()
 
 clock = pygame.time.Clock()
+
+counter = 0
 while run:
     clock.tick(30)
     keys = pygame.key.get_pressed()
@@ -305,13 +327,27 @@ while run:
         if event.type == pygame.QUIT:
             run = False
 
+
+    enemy.update(player)
+    #player.update()
+    update()
+
     collidestatus = enemy.collide(player)
     if collidestatus:
         print("Hit the monster")
         break
-    enemy.update(player)
-    player.update()
-    update()
+
+    counter += 1
+
+    if counter == 30:
+        SCORE -= 1
+        counter = 0
+
+    #if timew runs out quit
+    if SCORE == 0:
+        print("out of time")
+        break
+
 
 pygame.quit()
 exit(0)
