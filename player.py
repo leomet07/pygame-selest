@@ -95,7 +95,7 @@ class Enemy:
                 #problem above
                 #move bullet up by cham\nging its why
                 #print("moving bullet up")
-                BULLETS[i - deleted][1] -= 5
+                BULLETS[i - deleted][1] -= 7
             else:
                 dupbullets.pop(i)
                 deleted += 1
@@ -106,8 +106,29 @@ class Enemy:
             #check for bullet collision
             if bullet[1] < player.y + player.h and  bullet[1] > player.y  :
                 if bullet[0] > player.x and bullet[0] < player.x + player.w:
-                    print("hit the bullet")
-                    exit(0)
+
+                    #LET PLAYER LIVE IF TOUCHING THE GROUND
+                    if player.y + player.h != 498:
+                        print("hit the bullet")
+                        exit(0)
+
+
+        #move towards player upward
+        if self.y > player.y + player.h:
+            #move up if player is above
+            self.y -= 1
+
+        if self.y < player.y :
+            #move up if player is below
+            self.y += 2
+
+        if self.x < player.x + player.w :
+            #move up if player is below
+            self.x += 2
+
+        if self.x > player.x  :
+            #move up if player is below
+            self.x -= 2
 class Bullet:
     def __init__(self,x,y,w,h):
         self.x = x
