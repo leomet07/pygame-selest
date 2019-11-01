@@ -24,21 +24,18 @@ class Enemy:
     def draw(self, win):
         global char
         global monster
-        #pygame.draw.rect(win, (255, 0, 0), (self.x, self.y, self.w, self.h))
 
-        #pygame.draw.rect(win, (255, 0, 0), (self.x, self.y, self.w, self.h))
         sprite = monster
         monster = pygame.transform.scale(sprite, (self.w, self.h))
+        #draw the monster
         win.blit(monster, (self.x, self.y))
 
 
 
 
         #draw bullets
-        # also render bullets
         for bullet in BULLETS:
-            # darw bullet
-            # USE ULLETS X TO DRAW
+            #draw the current bullet
             pygame.draw.circle(win, (0,255,0), (bullet[0], bullet[1]), 5)
 
     def collide(self, bird):
@@ -68,40 +65,35 @@ class Enemy:
         return b_point
 
     def launchbullets(self, player):
-        print("Launching bullets")
-        print("Bullets: " + str(len(BULLETS)))
-        #bullet = ["playerx", "bottomofscreenY"]
+        #print("Launching bullets")
+        #print("Bullets: " + str(len(BULLETS)))
+
         bullet = [player.x + 5, 480]
         BULLETS.append(bullet)
     def update(self, player):
         global BULLETS
         self.tickcount += 1
         if self.tickcount == 75:
-            print("launch")
+            #print("launch")
             self.tickcount = 0
             self.launchbullets(player)
 
 
 
-        #move bullets
 
         #duplicate of bullets array as to not mess with for loop
         dupbullets = BULLETS
         deleted = 0
         for i in range(0,len(BULLETS) ):
-            #print(i)
-            #only move bullet up if its y is greater then the players
-            #print(BULLETS[i - deleted][1])
             if 0 <= BULLETS[i - deleted][1]:
-                #problem above
-                #move bullet up by cham\nging its why
-                #print("moving bullet up")
-                BULLETS[i - deleted][1] -= 7
+                BULLETS[i - deleted][1] -= 9
             else:
                 dupbullets.pop(i)
                 deleted += 1
-            #print(BULLETS)
 
+
+
+        #drawing of the bullets
         BULLETS = dupbullets
         for bullet in BULLETS:
             #check for bullet collision
@@ -115,43 +107,49 @@ class Enemy:
 
 
         #move towards player upward
-        if self.y > player.y + player.h:
-            #move up if player is above
+        if self.y + self.h> player.y + player.h:
+            #move monster up if player is above
             self.y -= 1
 
         if self.y < player.y :
-            #move up if player is below
-            self.y += 2
+            #move monster down if player is below
+            self.y += 1
 
-        if self.x < player.x  :
-            #move up if player is below
-            self.x += 2
+        if self.x  <= player.x  :
+            #move monster right if player is right
+            self.x += 1
 
-        if self.x > player.x + player.w :
-            #move up if player is below
-            self.x -= 2
-class Bullet:
-    def __init__(self,x,y,w,h):
-        self.x = x
-        self.y = y
-        self.w = w
-        self.h = h
+        if self.x + self.w > player.x  :
+            #move monster left if player is left
+            self.x -= 1
+
 class Player:
     def __init__(self, x, y):
+        #char is the character sprite
         global char
         self.g = 2
         self.x = x
         self.y = y
         self.h = 24
         self.w = 24
-        self.jumph = 110
+        self.jumph = 20
         self.isJump = False
         self.jumpcount = 10
         self.img = char
+        self.upwardvel = 0
+
+        #calculates total amount of pixels flown up
+        testjumph = self.jumph
+        self.totaljumph = 0
+        while testjumph != 0:
+            self.totaljumph += testjumph
+            testjumph -= 2
+            #subtracting 2 to simulate gravity
+
+
 
     def draw(self, win):
         global char
-
         #pygame.draw.rect(win, (255, 0, 0), (self.x, self.y, self.w, self.h))
         sprite = char
         char = pygame.transform.scale(sprite, (self.w, self.h))
@@ -161,78 +159,96 @@ class Player:
 
 
     def update(self):
+        global current_level
+        global enemy
+        #making the level a global var
+        global LINES
 
         #gravity conditions
         #print(self.y + self.h, self.x + self.w)
 
         allow = True
+        #gravity is allowed if not standing on a line
         for line in LINES:
-            #print(not(self.y + self.h == line["xy"][1]  and self.x > line["xy"][0] and self.x < line["x2y2"][0] )  and self.y + self.h < 498)
-
-            #print(not(self.y + self.h == line["xy"][1]  and self.x < line["x2y2"][0] and self.x > line["xy"][0] ) )
-
+            #if already standing on a line, dont check for standing on others
             if (allow):
+                #checking if touching line
                 if not(not(self.y + self.h == line["xy"][1]  and self.x + (self.w/1) > line["xy"][0] and self.x < line["x2y2"][0] )  and self.y + self.h < 498):
 
                     allow =  False
-                    #print("DISSALLOW")
-        #print(allow)
+
+
         if allow:
             self.y += self.g
 
         #print("-----")
 
-        #check for win condition
+        #getting the top line
         line = LINES[0]
+        # check for win condition
         if self.y + self.h == 70  and self.x + self.w > line["xy"][ 0] and self.x < line["x2y2"][ 0]:
             #if touching red line then game has been won
 
             print("win")
-            exit(0)
 
-    def get_mask(self):
-        """
-        gets the mask for the current image of the bird
-        :return: None
-        """
-        # used for object collision
-        return pygame.mask.from_surface(self.img)
+            current_level +=1
+            LINES = []
+            data = []
+            with open('level.json') as json_file:
+                data = json.load(json_file)
+
+                #if last level quit, otherwise continue loading
+                if len(data) > current_level :
+                    print(data[current_level]["level"])
+                    LINES = data[current_level]["level"]
+                else:
+                    print("victory")
+                    exit(0)
+
+            #ressting the player and enemypos
+            self.x = 400
+            self.y = 460
+            enemy.y = 460
+            enemy.x = 50
+
+
+
+        #moving player up if the  upward vel is positive(exists)
+        self.y -= self.upwardvel
+
+        #the jump gets slower towards the peak so the jump amount is lowered if it isnt zero.
+        if self.upwardvel > 0:
+            self.upwardvel -= 2
+
+
 
     def jump(self):
-        #print("jump command retrieved")
-        #if above ground then jump
+
+        #if above ground(floor) then jump
 
         allow = False
         if self.y + self.h >= 498 :
-            #only jump if line not in the way
-            print("jump called")
+
+            #lauprint("jump called")
 
             line = LINES[-1]
-
-            equation = not (self.y + self.h - self.jumph < LINES[-1]["xy"][1] and self.x < line["x2y2"][ 0] and self.x + (self.w/2) > line["xy"][0])
-
-
-
+            # only jump if the bottom platform is not in the way
+            equation = not (self.y + self.h - self.totaljumph < LINES[-1]["xy"][1] and self.x < line["x2y2"][ 0] and self.x + (self.w/2) > line["xy"][0])
 
             if equation:
-                self.y -= self.jumph
-                #print("pix")
+                self.upwardvel += self.jumph
 
-        #if on a line jump if the line above is far away
 
+        #if on a line jump
         for i in range(0,len(LINES)):
-            #print("line check")
+            #get the current line being cycled to
             line = LINES[i]
-            equation = True
 
+            #check if standing on a line
+            if self.y + self.h == line["xy"][1] and self.x + self.w > line["xy"][ 0] and self.x < line["x2y2"][ 0]:
 
+                self.upwardvel += self.jumph
 
-
-            #print(equation)
-            #HEHERE
-            if  self.y + self.h == line["xy"][1] and self.x + self.w > line["xy"][ 0] and self.x < line["x2y2"][ 0]:
-                if equation:
-                    self.y -= self.jumph
 
 
 
@@ -242,25 +258,17 @@ class Player:
 import json
 LINES = []
 data = []
+current_level = 0
+#loading in the level
 with open('level.json') as json_file:
     data = json.load(json_file)
-    print(data[0]["level"])
-    LINES = data[0]["level"]
-
-'''
-LINES = [
-
-{"xy": (166,70), "x2y2": (332,70) },
-{"xy": (2,136), "x2y2": (196,136) },
-{"xy": (255,190), "x2y2": (498,190) },
-{"xy": (2,250), "x2y2": (200,250) },
-{"xy": (260,310), "x2y2": (498,310) },
-{"xy": (2,364), "x2y2": (206,364) },
-{"xy": (166,430), "x2y2": (332,430) }
-]
-'''
-BULLETS = []
+    LINES = data[current_level]["level"]
 SCORE = data[0]["time"]
+
+
+BULLETS = []
+
+#initializing the players
 player = Player(400, 460)
 enemy = Enemy(30, 450)
 run = True
@@ -272,7 +280,7 @@ background.fill((0, 0, 0))
 
 
 def update():
-
+    enemy.update(player)
     #update player twice so more gravity and as a backup
     player.update()
     player.update()
@@ -280,15 +288,18 @@ def update():
 
 
 
-
+    #bg must be blit first to see things that are on top of it
     win.blit(bg, (0, 0))
 
     # writing the score to the screen
     textsurface = comicsans.render("Score: " + str(SCORE), True, (0, 0, 0))
     win.blit(textsurface, (0, 0))
-    #drawing after bg blip
+
+    #drawaing chars
     enemy.draw(win)
     player.draw(win)
+
+    #draw each platform
     for i in range(0,len(LINES)):
         line = LINES[i]
         c1 = line["xy"]
@@ -305,7 +316,6 @@ def update():
     pygame.display.update()
 
 clock = pygame.time.Clock()
-
 counter = 0
 while run:
     clock.tick(30)
@@ -316,22 +326,22 @@ while run:
             player.x += 6
     if keys[pygame.K_LEFT]:
         if player.x > 2:
-
             player.x -= 6
-
     if keys[pygame.K_UP]:
         player.jump()
+
+
     for event in pygame.event.get():
 
-        # wont throw an error if it quits.It thought player playerre quiting so it would quit.But now player arent so it works
+        # check if window was losed to stop the game loop
         if event.type == pygame.QUIT:
             run = False
 
 
-    enemy.update(player)
-    #player.update()
+
     update()
 
+    #check for collision
     collidestatus = enemy.collide(player)
     if collidestatus:
         print("Hit the monster")
@@ -343,7 +353,7 @@ while run:
         SCORE -= 1
         counter = 0
 
-    #if timew runs out quit
+    #if time runs out, quit
     if SCORE == 0:
         print("out of time")
         break
