@@ -278,12 +278,17 @@ pygame.display.set_caption('Selest')
 background = pygame.Surface(win.get_size())
 background.fill((0, 0, 0))
 
+#start button is the coords of the start button (x,y,w,h)
+startbutton = (200, 200, 100, 50)
 
 def update():
-    enemy.update(player)
-    #update player twice so more gravity and as a backup
-    player.update()
-    player.update()
+
+    #only update if game is running
+    if game_started:
+        enemy.update(player)
+        #update player twice so more gravity and as a backup
+        player.update()
+        player.update()
 
 
 
@@ -291,72 +296,92 @@ def update():
     #bg must be blit first to see things that are on top of it
     win.blit(bg, (0, 0))
 
-    # writing the score to the screen
-    textsurface = comicsans.render("Score: " + str(SCORE), True, (0, 0, 0))
-    win.blit(textsurface, (0, 0))
+    #draw start button if game isnt running
+    if not(game_started):
+        pygame.draw.rect(win, (255, 0, 0),startbutton)
+        btntext = comicsans.render("Start", True, (0, 0, 0))
+        win.blit(btntext, (startbutton[0] + 10,startbutton[1] + 2))
+    #only show game elemnts if gme is running
+    if game_started:
+        # writing the score to the screen
+        textsurface = comicsans.render("Score: " + str(SCORE), True, (0, 0, 0))
+        win.blit(textsurface, (0, 0))
 
-    #drawaing chars
-    enemy.draw(win)
-    player.draw(win)
+        #drawaing chars
+        enemy.draw(win)
+        player.draw(win)
 
-    #draw each platform
-    for i in range(0,len(LINES)):
-        line = LINES[i]
-        c1 = line["xy"]
-        c2 = line["x2y2"]
-        if i == 0:
-            pygame.draw.line(win, (255, 0, 0), c1, c2)
-            continue
+        #draw each platform
+        for i in range(0,len(LINES)):
+            line = LINES[i]
+            c1 = line["xy"]
+            c2 = line["x2y2"]
+            if i == 0:
+                pygame.draw.line(win, (255, 0, 0), c1, c2)
+                continue
 
 
 
-        pygame.draw.line(win, (255, 255, 255),c1, c2)
+            pygame.draw.line(win, (255, 255, 255),c1, c2)
 
     # win.blit(bg, (0, 0))
     pygame.display.update()
 
 clock = pygame.time.Clock()
 counter = 0
+game_started = False
 while run:
     clock.tick(30)
-    keys = pygame.key.get_pressed()
-
-    if keys[pygame.K_RIGHT]:
-        if player.x + player.w < ( winw- 5):
-            player.x += 6
-    if keys[pygame.K_LEFT]:
-        if player.x > 2:
-            player.x -= 6
-    if keys[pygame.K_UP]:
-        player.jump()
-
-
     for event in pygame.event.get():
 
         # check if window was losed to stop the game loop
         if event.type == pygame.QUIT:
             run = False
 
+    if game_started:
+        keys = pygame.key.get_pressed()
+
+        if keys[pygame.K_RIGHT]:
+            if player.x + player.w < ( winw- 5):
+                player.x += 6
+        if keys[pygame.K_LEFT]:
+            if player.x > 2:
+                player.x -= 6
+        if keys[pygame.K_UP]:
+            player.jump()
 
 
+
+
+
+
+    #run update after key recog
     update()
+    mouse_cords = pygame.mouse.get_pos()
+    if pygame.mouse.get_pressed()[0] == 1 and not(game_started):
+        # print("Here")
+        # check ifit is pressed on the rect
+        # print(mouse_cords)
+        if mouse_cords[0] > startbutton[0] and mouse_cords[0] < startbutton[0] + startbutton[2] and mouse_cords[1] > startbutton[1] and mouse_cords[1] < startbutton[1] +  startbutton[3]:
+            print("btn presssed")
+            game_started = True
+    if game_started:
+        #check for collision
+        collidestatus = enemy.collide(player)
+        if collidestatus:
+            print("Hit the monster")
+            break
 
-    #check for collision
-    collidestatus = enemy.collide(player)
-    if collidestatus:
-        print("Hit the monster")
-        break
+        counter += 1
 
-    counter += 1
+        if counter == 30:
+            SCORE -= 1
+            counter = 0
 
-    if counter == 30:
-        SCORE -= 1
-        counter = 0
-
-    #if time runs out, quit
-    if SCORE == 0:
-        print("out of time")
-        break
+        #if time runs out, quit
+        if SCORE == 0:
+            print("out of time")
+            break
 
 
 pygame.quit()
