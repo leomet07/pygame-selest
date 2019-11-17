@@ -71,6 +71,7 @@ class Enemy:
         bullet = [player.x + 5, 480]
         BULLETS.append(bullet)
     def update(self, player):
+        global run
         global BULLETS
         self.tickcount += 1
         if self.tickcount == 75:
@@ -103,7 +104,7 @@ class Enemy:
                     #LET PLAYER LIVE IF TOUCHING THE GROUND
                     if player.y + player.h != 498:
                         print("hit the bullet")
-                        exit(0)
+                        run = False
 
 
         #move towards player upward
@@ -203,7 +204,7 @@ class Player:
                     LINES = data[current_level]["level"]
                 else:
                     print("victory")
-                    exit(0)
+                    run = False
 
             #ressting the player and enemypos
             self.x = 400
@@ -385,4 +386,3 @@ while run:
 
 
 pygame.quit()
-exit(0)
