@@ -164,6 +164,9 @@ class Player:
         global enemy
         #making the level a global var
         global LINES
+        global run
+        global winstatus
+        global game_update
 
         #gravity conditions
         #print(self.y + self.h, self.x + self.w)
@@ -185,6 +188,7 @@ class Player:
         #print("-----")
 
         #getting the top line
+        #print("Length f lines" + str(len(LINES)))
         line = LINES[0]
         # check for win condition
         if self.y + self.h == 70  and self.x + self.w > line["xy"][ 0] and self.x < line["x2y2"][ 0]:
@@ -193,18 +197,20 @@ class Player:
             print("win")
 
             current_level +=1
-            LINES = []
+
             data = []
             with open('level.json') as json_file:
                 data = json.load(json_file)
 
                 #if last level quit, otherwise continue loading
                 if len(data) > current_level :
+                    LINES = []
                     print(data[current_level]["level"])
                     LINES = data[current_level]["level"]
                 else:
                     print("victory")
-                    run = False
+                    winstatus = True
+                    game_update = False
 
             #ressting the player and enemypos
             self.x = 400
@@ -265,7 +271,7 @@ with open('level.json') as json_file:
     data = json.load(json_file)
     LINES = data[current_level]["level"]
 SCORE = data[0]["time"]
-
+game_update = True
 
 BULLETS = []
 
@@ -273,7 +279,7 @@ BULLETS = []
 player = Player(400, 460)
 enemy = Enemy(30, 450)
 run = True
-
+winstatus = False
 
 pygame.display.set_caption('Selest')
 background = pygame.Surface(win.get_size())
@@ -281,15 +287,27 @@ background.fill((0, 0, 0))
 
 #start button is the coords of the start button (x,y,w,h)
 startbutton = (200, 200, 100, 50)
-
+endbutton = (176, 200, 148, 50)
 def update():
 
     #only update if game is running
-    if game_started:
-        enemy.update(player)
-        #update player twice so more gravity and as a backup
-        player.update()
-        player.update()
+    if game_update:
+        if game_started:
+            enemy.update(player)
+            #update player twice so more gravity and as a backup
+            player.update()
+            player.update()
+            '''
+            #if detected that game needs to end, dont update again
+            print(game_update,not(winstatus))
+            if game_update :
+                if not(winstatus):
+                    print("second updatwe")
+                    player.update()
+            else:
+                #if game needs to end quit drawing
+                return
+            '''
 
 
 
@@ -302,28 +320,35 @@ def update():
         pygame.draw.rect(win, (255, 0, 0),startbutton)
         btntext = comicsans.render("Start", True, (0, 0, 0))
         win.blit(btntext, (startbutton[0] + 10,startbutton[1] + 2))
+    if winstatus:
+        #if won display the win text
+        pygame.draw.rect(win, (0, 255, 0), endbutton)
+        btntext = comicsans.render("You Won!", True, (0, 0, 0))
+        win.blit(btntext, (endbutton[0] + 10, endbutton[1] + 2))
+
     #only show game elemnts if gme is running
     if game_started:
-        # writing the score to the screen
-        textsurface = comicsans.render("Score: " + str(SCORE), True, (0, 0, 0))
-        win.blit(textsurface, (0, 0))
+        if game_update:
+            # writing the score to the screen
+            textsurface = comicsans.render("Score: " + str(SCORE), True, (0, 0, 0))
+            win.blit(textsurface, (0, 0))
 
-        #drawaing chars
-        enemy.draw(win)
-        player.draw(win)
+            #drawaing chars
+            enemy.draw(win)
+            player.draw(win)
 
-        #draw each platform
-        for i in range(0,len(LINES)):
-            line = LINES[i]
-            c1 = line["xy"]
-            c2 = line["x2y2"]
-            if i == 0:
-                pygame.draw.line(win, (255, 0, 0), c1, c2)
-                continue
+            #draw each platform
+            for i in range(0,len(LINES)):
+                line = LINES[i]
+                c1 = line["xy"]
+                c2 = line["x2y2"]
+                if i == 0:
+                    pygame.draw.line(win, (255, 0, 0), c1, c2)
+                    continue
 
 
 
-            pygame.draw.line(win, (255, 255, 255),c1, c2)
+                pygame.draw.line(win, (255, 255, 255),c1, c2)
 
     # win.blit(bg, (0, 0))
     pygame.display.update()
@@ -358,6 +383,7 @@ while run:
 
     #run update after key recog
     update()
+    #print(winstatus)
     mouse_cords = pygame.mouse.get_pos()
     if pygame.mouse.get_pressed()[0] == 1 and not(game_started):
         # print("Here")
@@ -366,6 +392,20 @@ while run:
         if mouse_cords[0] > startbutton[0] and mouse_cords[0] < startbutton[0] + startbutton[2] and mouse_cords[1] > startbutton[1] and mouse_cords[1] < startbutton[1] +  startbutton[3]:
             print("btn presssed")
             game_started = True
+
+    if winstatus:
+        #print("check for end buton status")
+        if pygame.mouse.get_pressed()[0] == 1 :
+            # print("Here")
+            # check ifit is pressed on the rect
+            # print(mouse_cords)
+            if mouse_cords[0] > endbutton[0] and mouse_cords[0] < endbutton[0] + endbutton[2] and mouse_cords[1] > endbutton[1] and mouse_cords[1] < endbutton[1] + endbutton[3]:
+                print("end btn presssed")
+                run = False
+
+
+
+
     if game_started:
         #check for collision
         collidestatus = enemy.collide(player)
