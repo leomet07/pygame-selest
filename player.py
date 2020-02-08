@@ -133,6 +133,8 @@ class Player:
         self.y = y
         self.h = 24
         self.w = 24
+        self.x_vel = 0
+        self.y_vel = 0
         self.jumph = 20
         self.isJump = False
         self.jumpcount = 10
@@ -170,6 +172,27 @@ class Player:
 
         #gravity conditions
         #print(self.y + self.h, self.x + self.w)
+        # update the player
+        self.x += self.x_vel
+        self.y += self.y_vel
+
+        # if moving apply friction*so stops once key is lifted)
+        if self.x_vel != 0:
+            # if moving right reduce right force
+            if self.x_vel > 0:
+                if self.x_vel > 1:
+                    self.x_vel -= 1
+                else:
+                    self.x_vel = 0
+
+
+            # if moving left reduce left force
+            if self.x_vel < 0:
+                #only apply friction reducer whole if it can fit
+                if self.x_vel < -1:
+                    self.x_vel += 1
+                else:
+                    self.x_vel = 0
 
         allow = True
         #gravity is allowed if not standing on a line
@@ -288,6 +311,7 @@ background.fill((0, 0, 0))
 #start button is the coords of the start button (x,y,w,h)
 startbutton = (200, 200, 100, 50)
 endbutton = (176, 200, 148, 50)
+restartbutton = (186, 400, 128, 50)
 def update():
 
     #only update if game is running
@@ -297,17 +321,7 @@ def update():
             #update player twice so more gravity and as a backup
             player.update()
             player.update()
-            '''
-            #if detected that game needs to end, dont update again
-            print(game_update,not(winstatus))
-            if game_update :
-                if not(winstatus):
-                    print("second updatwe")
-                    player.update()
-            else:
-                #if game needs to end quit drawing
-                return
-            '''
+
 
 
 
@@ -317,7 +331,7 @@ def update():
 
     #draw start button if game isnt running
     if not(game_started):
-        pygame.draw.rect(win, (255, 0, 0),startbutton)
+        pygame.draw.rect(win, (255, 80, 80),startbutton)
         btntext = comicsans.render("Start", True, (0, 0, 0))
         win.blit(btntext, (startbutton[0] + 10,startbutton[1] + 2))
     if winstatus:
@@ -325,6 +339,11 @@ def update():
         pygame.draw.rect(win, (0, 255, 0), endbutton)
         btntext = comicsans.render("You Won!", True, (0, 0, 0))
         win.blit(btntext, (endbutton[0] + 10, endbutton[1] + 2))
+
+        #display restart button
+        pygame.draw.rect(win, (0, 255, 0), restartbutton)
+        btntext = comicsans.render("Restart", True, (0, 0, 0))
+        win.blit(btntext, (restartbutton[0] + 10, restartbutton[1] + 2))
 
     #only show game elemnts if gme is running
     if game_started:
@@ -368,11 +387,13 @@ while run:
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_RIGHT]:
-            if player.x + player.w < ( winw- 5):
-                player.x += 6
+            #15 is the total amount moved
+            if player.x + player.w + 15 < 500:
+                player.x_vel = 5
         if keys[pygame.K_LEFT]:
-            if player.x > 2:
-                player.x -= 6
+            # 15 is the total amount moved
+            if player.x - 15 > 0:
+                player.x_vel = -5
         if keys[pygame.K_UP]:
             player.jump()
 
@@ -390,11 +411,12 @@ while run:
         # check ifit is pressed on the rect
         # print(mouse_cords)
         if mouse_cords[0] > startbutton[0] and mouse_cords[0] < startbutton[0] + startbutton[2] and mouse_cords[1] > startbutton[1] and mouse_cords[1] < startbutton[1] +  startbutton[3]:
-            print("btn presssed")
+            print("startbtn presssed")
             game_started = True
 
     if winstatus:
         #print("check for end buton status")
+        #end button collisi0on
         if pygame.mouse.get_pressed()[0] == 1 :
             # print("Here")
             # check ifit is pressed on the rect
@@ -402,6 +424,33 @@ while run:
             if mouse_cords[0] > endbutton[0] and mouse_cords[0] < endbutton[0] + endbutton[2] and mouse_cords[1] > endbutton[1] and mouse_cords[1] < endbutton[1] + endbutton[3]:
                 print("end btn presssed")
                 run = False
+
+            if mouse_cords[0] > restartbutton[0] and mouse_cords[0] < restartbutton[0] + restartbutton[2] and mouse_cords[1] > restartbutton[1] and mouse_cords[1] < restartbutton[1] + restartbutton[3]:
+                print("Restart")
+                player.x = 400
+                player.y = 460
+                enemy.y = 460
+                enemy.x = 50
+
+                #to get start menu again
+                winstatus = False
+
+                game_started = False
+                game_update = True
+                #run = False
+                LINES = []
+                data = []
+                current_level = 0
+                # loading in the level
+                with open('level.json') as json_file:
+                    data = json.load(json_file)
+                    LINES = data[current_level]["level"]
+                SCORE = data[0]["time"]
+                game_update = True
+
+                BULLETS = []
+
+                #reset the levels
 
 
 
